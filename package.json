@@ -1,10 +1,14 @@
 {
   "name": "retry",
-  "version": "1.0.4",
-  "description": "Retry logic with exponential backoff",
+  "version": "2.0.0",
+  "main": "./js/src/index",
   "dependencies": {
-    "meteor-client": "aleclarson/meteor-client#1.1.7",
+    "emptyFunction": "aleclarson/emptyFunction#1.0.0",
+    "factory": "aleclarson/factory#1.0.0",
+    "isReactNative": "aleclarson/isReactNative#1.0.0",
+    "network": "aleclarson/network#1.0.0",
     "random": "aleclarson/random#1.0.4",
-    "underscore": "aleclarson/underscore#1.5.2"
+    "timer": "aleclarson/timer#1.0.0",
+    "type-utils": "aleclarson/type-utils#1.0.0"
   }
 }

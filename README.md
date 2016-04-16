@@ -1,23 +1,34 @@
 
-# retry v1.0.4 [![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
+# retry v2.0.0 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 
-This package is stripped from [meteor/retry](https://atmospherejs.com/meteor/retry) and made compatible with [React Native](https://github.com/facebook/react-native).
+Retries a `Function` using exponential backoff.
 
-**Note:** This package is only for client-side usage.
+```coffee
+{ Retry } = require "retry"
 
-&nbsp;
+retry = Retry()
 
-## usage
-
-```js
-var Retry = require('retry');
-
-var retry = new Retry({
-  fuzz: 0.5,             // Factor to randomize retry count by (to avoid retry storms)
-  exponent: 2.2,         // Exponential factor to increase timeout each attempt
-  minCount: 10,          // How many time to reconnect "instantly"
-  minTimeout: 2,         // Time to wait for the first `minCount` retries (in milliseconds)
-  maxTimeout: 5 * 60000, // Maximum time between retries (in milliseconds)
-  baseTimeout: 1000,     // Time for initial reconnect attempt (in milliseconds)
-});
+loadEventually = ->
+  loadSomething().fail ->
+    retry loadEventually
 ```
+
+#### Options
+
+- `baseTimeout: Number` - Milliseconds to wait for the first "non-instant" reconnect attempt. Defaults to `1000`.
+- `exponent: Number` - Exponential factor to increate timeout each attempt. Defaults to `2.2`.
+- `maxTimeout: Number` - Maximum milliseconds to wait before reconnecting. Defaults to `300000` (5 minutes).
+- `minTimeout: Number` - Milliseconds to wait before reconnecting "instantly". Defaults to `10`.
+- `minCount: Number` - Number of times to reconnect "instantly". Defaults to `2`.
+- `fuzz: [ Number, Void ]` - Avoids "retry storms" when a server goes down. Defaults to `0.5`.
+
+#### Properties
+
+- `retries: Number { get }`
+- `isRetrying: Boolean { get }`
+
+All options are made properties.
+
+#### Methods
+
+- `reset()` - Stops the retry timer and resets the retry count.
