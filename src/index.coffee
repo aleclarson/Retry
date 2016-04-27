@@ -1,6 +1,10 @@
 
-module.exports =
+define = require "define"
 
-  Retry: require "./Retry"
+define exports,
 
-  RemoteRetry: require "./RemoteRetry"
+  Retry: lazy: ->
+    require "./Retry"
+
+  RemoteRetry: lazy: ->
+    require "./RemoteRetry"

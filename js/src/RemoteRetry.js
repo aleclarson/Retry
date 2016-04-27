@@ -1,8 +1,8 @@
-var Factory, Network, Retry, assert, isReactNative;
+var Factory, Network, Retry, assert;
+
+require("isReactNative");
 
 assert = require("type-utils").assert;
-
-isReactNative = require("isReactNative");
 
 Factory = require("factory");
 

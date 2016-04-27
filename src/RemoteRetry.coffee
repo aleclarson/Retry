@@ -1,7 +1,8 @@
 
+require "isReactNative"
+
 { assert } = require "type-utils"
 
-isReactNative = require "isReactNative"
 Factory = require "factory"
 Network = require "network"
 
