@@ -1,34 +1,84 @@
 
-# retry v2.0.0 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
+# Retry 3.0.0 ![stable](https://img.shields.io/badge/stability-stable-4EBA0F.svg?style=flat)
 
-Retries a `Function` using exponential backoff.
+`Retry` is a class that retries one `Function` at a time.
+
+For every successive retry, exponential backoff is applied using the given options.
+
+### Retry.optionTypes
 
 ```coffee
-{ Retry } = require "retry"
+# Milliseconds to wait for the first "non-instant" reconnect attempt.
+# Defaults to 1000
+baseTimeout: Number
 
-retry = Retry()
+# Exponential factor to increate timeout each attempt.
+# Defaults to 2.2
+exponent: Number
 
-loadEventually = ->
-  loadSomething().fail ->
-    retry loadEventually
+# Maximum milliseconds to wait before reconnecting.
+# Defaults to 300,000 (5 minutes)
+maxTimeout: Number
+
+# Milliseconds to wait before reconnecting "instantly".
+# Defaults to 10
+minTimeout: Number
+
+# Number of times to reconnect "instantly".
+# Defaults to 2
+minCount: Number
+
+# Avoids "retry storms" when a server goes down.
+# Defaults to 0.5
+fuzz: [ Number, Null ]
+
+# Return false if the function should not be retried.
+# Defaults to a function that always returns true.
+canRetry: Function
 ```
 
-#### Options
+#### Retry.properties
 
-- `baseTimeout: Number` - Milliseconds to wait for the first "non-instant" reconnect attempt. Defaults to `1000`.
-- `exponent: Number` - Exponential factor to increate timeout each attempt. Defaults to `2.2`.
-- `maxTimeout: Number` - Maximum milliseconds to wait before reconnecting. Defaults to `300000` (5 minutes).
-- `minTimeout: Number` - Milliseconds to wait before reconnecting "instantly". Defaults to `10`.
-- `minCount: Number` - Number of times to reconnect "instantly". Defaults to `2`.
-- `fuzz: [ Number, Void ]` - Avoids "retry storms" when a server goes down. Defaults to `0.5`.
+```coffee
+# Defaults to 'options.baseTimeout'
+retry.baseTimeout
 
-#### Properties
+# Defaults to 'options.exponent'
+retry.exponent
 
-- `retries: Number { get }`
-- `isRetrying: Boolean { get }`
+# Defaults to 'options.maxTimeout'
+retry.maxTimeout
 
-All options are made properties.
+# Defaults to 'options.minTimeout'
+retry.minTimeout
 
-#### Methods
+# Defaults to 'options.minCount'
+retry.minCount
 
-- `reset()` - Stops the retry timer and resets the retry count.
+# Defaults to 'options.fuzz'
+retry.fuzz
+
+# Defaults to 'options.canRetry'
+retry.canRetry
+
+# The number of retries. (read-only)
+retry.retries
+
+# Equals true when retrying. (read-only)
+retry.isRetrying
+```
+
+#### Retry.prototype
+
+```coffee
+# Retries the given function.
+# Increments 'retry.retries'.
+retry ->
+
+# Resets 'retry.retries' and stops the retry timer if active.
+retry.reset()
+```
+
+-
+
+**TODO:** Write tests?!

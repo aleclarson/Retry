@@ -2,59 +2,74 @@
 { Null, assertType } = require "type-utils"
 
 emptyFunction = require "emptyFunction"
-Factory = require "factory"
 Random = require "random"
 Timer = require "timer"
+Type = require "Type"
 
-module.exports = Factory "Retry",
+type = Type "Retry", (callback) ->
+  return if @_retryTimer
+  assertType callback, Function.Kind
+  @_callback = callback
+  timeout = @_computeTimeout @_retries
+  @_retryTimer = Timer timeout, @_retry
+  return
 
-  kind: Function
+type.optionTypes =
+  baseTimeout: Number
+  exponent: Number
+  maxTimeout: Number
+  minTimeout: Number
+  minCount: Number
+  fuzz: [ Number, Null ]
+  canRetry: Function
 
-  optionTypes:
-    baseTimeout: Number
-    exponent: Number
-    maxTimeout: Number
-    minTimeout: Number
-    minCount: Number
-    fuzz: [ Number, Null ]
+type.optionDefaults =
+  baseTimeout: 1e3 # => 1 second
+  exponent: 2.2
+  maxTimeout: 5 * 6e4 # => 5 minutes
+  minTimeout: 10
+  minCount: 2
+  fuzz: 0.5
+  canRetry: emptyFunction.thatReturnsTrue
 
-  optionDefaults:
-    baseTimeout: 1e3 # => 1 second
-    exponent: 2.2
-    maxTimeout: 5 * 6e4 # => 5 minutes
-    minTimeout: 10
-    minCount: 2
-    fuzz: 0.5
+type.defineProperties
 
-  customValues:
+  retries: get: ->
+    @_retries
 
-    retries: get: ->
-      @_retries
+  isRetrying: get: ->
+    @_retryTimer isnt null
 
-    isRetrying: get: ->
-      @_retryTimer isnt null
+type.defineValues
 
-  initValues: (options) -> [
-    options
-    _retries: 0
-    _retryTimer: null
-    _callback: null
-  ]
+  baseTimeout: (options) -> options.baseTimeout
 
-  boundMethods: [
-    "_retry"
-  ]
+  exponent: (options) -> options.exponent
 
-  func: (callback) ->
-    return if @_retryTimer?
-    assertType callback, Function.Kind
-    @_callback = callback
-    timeout = @_computeTimeout @_retries
-    @_retryTimer = Timer timeout, @_retry
-    return
+  maxTimeout: (options) -> options.maxTimeout
+
+  minTimeout: (options) -> options.minTimeout
+
+  minCount: (options) -> options.minCount
+
+  fuzz: (options) -> options.fuzz
+
+  canRetry: (options) -> options.canRetry
+
+  _retries: 0
+
+  _retryTimer: null
+
+  _callback: null
+
+type.bindMethods [
+  "_retry"
+]
+
+type.defineMethods
 
   reset: ->
-    if @_retryTimer?
+    if @_retryTimer
       @_retryTimer.stop()
       @_retryTimer = null
     @_retries = 0
@@ -73,9 +88,12 @@ module.exports = Factory "Retry",
     timeout * fuzz
 
   _retry: ->
+    return unless @canRetry()
     callback = @_callback
     @_callback = null
     @_retryTimer = null
     @_retries += 1
     callback()
     return
+
+module.exports = type.build()

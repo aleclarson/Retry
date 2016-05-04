@@ -1,67 +1,91 @@
-var Factory, Null, Random, Timer, assertType, emptyFunction, ref;
+var Null, Random, Timer, Type, assertType, emptyFunction, ref, type;
 
 ref = require("type-utils"), Null = ref.Null, assertType = ref.assertType;
 
 emptyFunction = require("emptyFunction");
 
-Factory = require("factory");
-
 Random = require("random");
 
 Timer = require("timer");
 
-module.exports = Factory("Retry", {
-  kind: Function,
-  optionTypes: {
-    baseTimeout: Number,
-    exponent: Number,
-    maxTimeout: Number,
-    minTimeout: Number,
-    minCount: Number,
-    fuzz: [Number, Null]
-  },
-  optionDefaults: {
-    baseTimeout: 1e3,
-    exponent: 2.2,
-    maxTimeout: 5 * 6e4,
-    minTimeout: 10,
-    minCount: 2,
-    fuzz: 0.5
-  },
-  customValues: {
-    retries: {
-      get: function() {
-        return this._retries;
-      }
-    },
-    isRetrying: {
-      get: function() {
-        return this._retryTimer !== null;
-      }
+Type = require("Type");
+
+type = Type("Retry", function(callback) {
+  var timeout;
+  if (this._retryTimer) {
+    return;
+  }
+  assertType(callback, Function.Kind);
+  this._callback = callback;
+  timeout = this._computeTimeout(this._retries);
+  this._retryTimer = Timer(timeout, this._retry);
+});
+
+type.optionTypes = {
+  baseTimeout: Number,
+  exponent: Number,
+  maxTimeout: Number,
+  minTimeout: Number,
+  minCount: Number,
+  fuzz: [Number, Null],
+  canRetry: Function
+};
+
+type.optionDefaults = {
+  baseTimeout: 1e3,
+  exponent: 2.2,
+  maxTimeout: 5 * 6e4,
+  minTimeout: 10,
+  minCount: 2,
+  fuzz: 0.5,
+  canRetry: emptyFunction.thatReturnsTrue
+};
+
+type.defineProperties({
+  retries: {
+    get: function() {
+      return this._retries;
     }
   },
-  initValues: function(options) {
-    return [
-      options, {
-        _retries: 0,
-        _retryTimer: null,
-        _callback: null
-      }
-    ];
-  },
-  boundMethods: ["_retry"],
-  func: function(callback) {
-    var timeout;
-    if (this._retryTimer != null) {
-      return;
+  isRetrying: {
+    get: function() {
+      return this._retryTimer !== null;
     }
-    assertType(callback, Function.Kind);
-    this._callback = callback;
-    timeout = this._computeTimeout(this._retries);
-    this._retryTimer = Timer(timeout, this._retry);
+  }
+});
+
+type.defineValues({
+  baseTimeout: function(options) {
+    return options.baseTimeout;
   },
+  exponent: function(options) {
+    return options.exponent;
+  },
+  maxTimeout: function(options) {
+    return options.maxTimeout;
+  },
+  minTimeout: function(options) {
+    return options.minTimeout;
+  },
+  minCount: function(options) {
+    return options.minCount;
+  },
+  fuzz: function(options) {
+    return options.fuzz;
+  },
+  canRetry: function(options) {
+    return options.canRetry;
+  },
+  _retries: 0,
+  _retryTimer: null,
+  _callback: null
+});
+
+type.bindMethods(["_retry"]);
+
+type.defineMethods({
   reset: function() {
-    if (this._retryTimer != null) {
+    if (this._retryTimer) {
       this._retryTimer.stop();
       this._retryTimer = null;
     }
@@ -87,6 +111,9 @@ module.exports = Factory("Retry", {
   },
   _retry: function() {
     var callback;
+    if (!this.canRetry()) {
+      return;
+    }
     callback = this._callback;
     this._callback = null;
     this._retryTimer = null;
@@ -94,5 +121,7 @@ module.exports = Factory("Retry", {
     callback();
   }
 });
+
+module.exports = type.build();
 
 //# sourceMappingURL=../../map/src/Retry.map
