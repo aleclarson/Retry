@@ -1,9 +1,9 @@
 
-{ Null, assertType } = require "type-utils"
-
 emptyFunction = require "emptyFunction"
+assertType = require "assertType"
 Random = require "random"
 Timer = require "timer"
+Null = require "Null"
 Type = require "Type"
 
 type = Type "Retry", (callback) ->

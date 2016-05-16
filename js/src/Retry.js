@@ -1,12 +1,14 @@
-var Null, Random, Timer, Type, assertType, emptyFunction, ref, type;
-
-ref = require("type-utils"), Null = ref.Null, assertType = ref.assertType;
+var Null, Random, Timer, Type, assertType, emptyFunction, type;
 
 emptyFunction = require("emptyFunction");
+
+assertType = require("assertType");
 
 Random = require("random");
 
 Timer = require("timer");
+
+Null = require("Null");
 
 Type = require("Type");
 
