@@ -14,31 +14,14 @@ type = Type "Retry", (callback) ->
   @_retryTimer = Timer timeout, @_retry
   return
 
-type.optionTypes =
-  baseTimeout: Number
-  exponent: Number
-  maxTimeout: Number
-  minTimeout: Number
-  minCount: Number
-  fuzz: [ Number, Null ]
-  canRetry: Function
-
-type.optionDefaults =
-  baseTimeout: 1e3 # => 1 second
-  exponent: 2.2
-  maxTimeout: 5 * 6e4 # => 5 minutes
-  minTimeout: 10
-  minCount: 2
-  fuzz: 0.5
-  canRetry: emptyFunction.thatReturnsTrue
-
-type.defineProperties
-
-  retries: get: ->
-    @_retries
-
-  isRetrying: get: ->
-    @_retryTimer isnt null
+type.defineOptions
+  baseTimeout: Number.withDefault 1e3 # => 1 second
+  exponent: Number.withDefault 2.2
+  maxTimeout: Number.withDefault 5 * 6e4 # => 5 minutes
+  minTimeout: Number.withDefault 10
+  minCount: Number.withDefault 2
+  fuzz: { type: [ Number, Null ], default: 0.5 }
+  canRetry: Function.withDefault emptyFunction.thatReturnsTrue
 
 type.defineValues
 
@@ -62,9 +45,22 @@ type.defineValues
 
   _callback: null
 
-type.bindMethods [
-  "_retry"
-]
+type.defineGetters
+
+  retries: -> @_retries
+
+  isRetrying: -> @_retryTimer isnt null
+
+type.defineBoundMethods
+
+  _retry: ->
+    return unless @canRetry()
+    callback = @_callback
+    @_callback = null
+    @_retryTimer = null
+    @_retries += 1
+    callback()
+    return
 
 type.defineMethods
 
@@ -86,14 +82,5 @@ type.defineMethods
     fuzz = @fuzz * Random.fraction()
     fuzz += 1 - @fuzz / 2
     timeout * fuzz
-
-  _retry: ->
-    return unless @canRetry()
-    callback = @_callback
-    @_callback = null
-    @_retryTimer = null
-    @_retries += 1
-    callback()
-    return
 
 module.exports = type.build()

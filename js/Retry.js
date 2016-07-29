@@ -23,37 +23,17 @@ type = Type("Retry", function(callback) {
   this._retryTimer = Timer(timeout, this._retry);
 });
 
-type.optionTypes = {
-  baseTimeout: Number,
-  exponent: Number,
-  maxTimeout: Number,
-  minTimeout: Number,
-  minCount: Number,
-  fuzz: [Number, Null],
-  canRetry: Function
-};
-
-type.optionDefaults = {
-  baseTimeout: 1e3,
-  exponent: 2.2,
-  maxTimeout: 5 * 6e4,
-  minTimeout: 10,
-  minCount: 2,
-  fuzz: 0.5,
-  canRetry: emptyFunction.thatReturnsTrue
-};
-
-type.defineProperties({
-  retries: {
-    get: function() {
-      return this._retries;
-    }
+type.defineOptions({
+  baseTimeout: Number.withDefault(1e3),
+  exponent: Number.withDefault(2.2),
+  maxTimeout: Number.withDefault(5 * 6e4),
+  minTimeout: Number.withDefault(10),
+  minCount: Number.withDefault(2),
+  fuzz: {
+    type: [Number, Null],
+    "default": 0.5
   },
-  isRetrying: {
-    get: function() {
-      return this._retryTimer !== null;
-    }
-  }
+  canRetry: Function.withDefault(emptyFunction.thatReturnsTrue)
 });
 
 type.defineValues({
@@ -83,7 +63,28 @@ type.defineValues({
   _callback: null
 });
 
-type.bindMethods(["_retry"]);
+type.defineGetters({
+  retries: function() {
+    return this._retries;
+  },
+  isRetrying: function() {
+    return this._retryTimer !== null;
+  }
+});
+
+type.defineBoundMethods({
+  _retry: function() {
+    var callback;
+    if (!this.canRetry()) {
+      return;
+    }
+    callback = this._callback;
+    this._callback = null;
+    this._retryTimer = null;
+    this._retries += 1;
+    callback();
+  }
+});
 
 type.defineMethods({
   reset: function() {
@@ -110,17 +111,6 @@ type.defineMethods({
     fuzz = this.fuzz * Random.fraction();
     fuzz += 1 - this.fuzz / 2;
     return timeout * fuzz;
-  },
-  _retry: function() {
-    var callback;
-    if (!this.canRetry()) {
-      return;
-    }
-    callback = this._callback;
-    this._callback = null;
-    this._retryTimer = null;
-    this._retries += 1;
-    callback();
   }
 });
 
