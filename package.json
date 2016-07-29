@@ -5,7 +5,7 @@
   "dependencies": {
     "Null": "aleclarson/Null#1.0.0",
     "Type": "aleclarson/Type#1.0.0",
-    "assertType": "aleclarson/assertType#1.0.0",
+    "assertType": "aleclarson/assertType#2.0.0",
     "emptyFunction": "aleclarson/emptyFunction#1.0.0",
     "random": "aleclarson/random#1.0.4",
     "timer": "aleclarson/timer#2.0.0"
