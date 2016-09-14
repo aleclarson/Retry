@@ -1,18 +1,24 @@
 {
-  "name": "retry",
+  "name": "Retry",
   "version": "3.0.0",
   "main": "js/Retry",
+  "plugins": [
+    "lotus-coffee"
+  ],
+  "scripts": {
+    "build": "coffee -cb -o js src",
+    "postinstall": "postinstall-build js 'npm run build'"
+  },
   "dependencies": {
     "Null": "aleclarson/Null#1.0.0",
     "Type": "aleclarson/Type#1.1.0",
     "assertType": "aleclarson/assertType#2.0.0",
     "emptyFunction": "aleclarson/emptyFunction#1.0.0",
+    "postinstall-build": "0.2.x",
     "random": "aleclarson/random#1.0.4",
     "timer": "aleclarson/timer#2.0.0"
   },
-  "lotus": {
-    "plugins": [
-      "lotus-coffee"
-    ]
+  "devDependencies": {
+    "coffee-script": "1.9.x"
   }
 }
