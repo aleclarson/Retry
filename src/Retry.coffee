@@ -1,60 +1,71 @@
 
-{ Null, assertType } = require "type-utils"
-
 emptyFunction = require "emptyFunction"
-Factory = require "factory"
+assertType = require "assertType"
 Random = require "random"
 Timer = require "timer"
+Null = require "Null"
+Type = require "Type"
 
-module.exports = Factory "Retry",
+type = Type "Retry", (callback) ->
+  return if @_retryTimer
+  assertType callback, Function.Kind
+  @_callback = callback
+  timeout = @_computeTimeout @_retries
+  @_retryTimer = Timer timeout, @_retry
+  return
 
-  kind: Function
+type.defineOptions
+  baseTimeout: Number.withDefault 1e3 # => 1 second
+  exponent: Number.withDefault 2.2
+  maxTimeout: Number.withDefault 5 * 6e4 # => 5 minutes
+  minTimeout: Number.withDefault 10
+  minCount: Number.withDefault 2
+  fuzz: { type: [ Number, Null ], default: 0.5 }
+  canRetry: Function.withDefault emptyFunction.thatReturnsTrue
 
-  optionTypes:
-    baseTimeout: Number
-    exponent: Number
-    maxTimeout: Number
-    minTimeout: Number
-    minCount: Number
-    fuzz: [ Number, Null ]
+type.defineValues
 
-  optionDefaults:
-    baseTimeout: 1e3 # => 1 second
-    exponent: 2.2
-    maxTimeout: 5 * 6e4 # => 5 minutes
-    minTimeout: 10
-    minCount: 2
-    fuzz: 0.5
+  baseTimeout: (options) -> options.baseTimeout
 
-  customValues:
+  exponent: (options) -> options.exponent
 
-    retries: get: ->
-      @_retries
+  maxTimeout: (options) -> options.maxTimeout
 
-    isRetrying: get: ->
-      @_retryTimer isnt null
+  minTimeout: (options) -> options.minTimeout
 
-  initValues: (options) -> [
-    options
-    _retries: 0
-    _retryTimer: null
-    _callback: null
-  ]
+  minCount: (options) -> options.minCount
 
-  boundMethods: [
-    "_retry"
-  ]
+  fuzz: (options) -> options.fuzz
 
-  func: (callback) ->
-    return if @_retryTimer?
-    assertType callback, Function.Kind
-    @_callback = callback
-    timeout = @_computeTimeout @_retries
-    @_retryTimer = Timer timeout, @_retry
+  canRetry: (options) -> options.canRetry
+
+  _retries: 0
+
+  _retryTimer: null
+
+  _callback: null
+
+type.defineGetters
+
+  retries: -> @_retries
+
+  isRetrying: -> @_retryTimer isnt null
+
+type.defineBoundMethods
+
+  _retry: ->
+    return unless @canRetry()
+    callback = @_callback
+    @_callback = null
+    @_retryTimer = null
+    @_retries += 1
+    callback()
     return
 
+type.defineMethods
+
   reset: ->
-    if @_retryTimer?
+    if @_retryTimer
       @_retryTimer.stop()
       @_retryTimer = null
     @_retries = 0
@@ -72,10 +83,4 @@ module.exports = Factory "Retry",
     fuzz += 1 - @fuzz / 2
     timeout * fuzz
 
-  _retry: ->
-    callback = @_callback
-    @_callback = null
-    @_retryTimer = null
-    @_retries += 1
-    callback()
-    return
+module.exports = type.build()
