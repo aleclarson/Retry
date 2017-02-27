@@ -14,41 +14,38 @@ type = Type "Retry", (callback) ->
   @_retryTimer = Timer timeout, @_retry
   return
 
-type.defineOptions
-  baseTimeout: Number.withDefault 1e3 # => 1 second
-  exponent: Number.withDefault 2.2
-  maxTimeout: Number.withDefault 5 * 6e4 # => 5 minutes
-  minTimeout: Number.withDefault 10
-  minCount: Number.withDefault 2
-  fuzz: { type: [ Number, Null ], default: 0.5 }
-  canRetry: Function.withDefault emptyFunction.thatReturnsTrue
+type.defineArgs ->
 
-type.defineValues
+  types:
+    fuzz: Number.or Null
+    baseTimeout: Number
+    exponent: Number
+    maxTimeout: Number
+    minTimeout: Number
+    minCount: Number
+    canRetry: Function
 
-  baseTimeout: (options) -> options.baseTimeout
+  defaults:
+    fuzz: 0.5
+    baseTimeout: 1000 # ms
+    exponent: 2.2 # exponential backoff
+    maxTimeout: 5 * 6e4 # 5 minutes
+    minTimeout: 10
+    minCount: 2
+    canRetry: emptyFunction.thatReturnsTrue
 
-  exponent: (options) -> options.exponent
+type.defineValues do ->
 
-  maxTimeout: (options) -> options.maxTimeout
+  internals =
+    _retries: 0
+    _retryTimer: null
+    _callback: null
 
-  minTimeout: (options) -> options.minTimeout
-
-  minCount: (options) -> options.minCount
-
-  fuzz: (options) -> options.fuzz
-
-  canRetry: (options) -> options.canRetry
-
-  _retries: 0
-
-  _retryTimer: null
-
-  _callback: null
+  return (options) ->
+    Object.assign options, internals
 
 type.defineGetters
-
   retries: -> @_retries
-
   isRetrying: -> @_retryTimer isnt null
 
 type.defineBoundMethods
