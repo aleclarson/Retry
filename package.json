@@ -1,0 +1,13 @@
+{
+  "name": "Retry",
+  "version": "3.1.1",
+  "main": "js/Retry",
+  "dependencies": {
+    "Null": "aleclarson/Null#1.0.2",
+    "Type": "aleclarson/Type#2.4.0",
+    "assertType": "aleclarson/assertType#2.0.2",
+    "emptyFunction": "aleclarson/emptyFunction#1.0.0",
+    "random": "aleclarson/random#1.0.4",
+    "timer": "aleclarson/timer#2.0.2"
+  }
+}
