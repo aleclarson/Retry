@@ -6,13 +6,7 @@ Timer = require "timer"
 Null = require "Null"
 Type = require "Type"
 
-type = Type "Retry", (callback) ->
-  return if @_retryTimer
-  assertType callback, Function.Kind
-  @_callback = callback
-  timeout = @_computeTimeout @_retries
-  @_retryTimer = Timer timeout, @_retry
-  return
+type = Type "Retry"
 
 type.defineArgs ->
 
@@ -34,19 +28,45 @@ type.defineArgs ->
     minCount: 2
     canRetry: emptyFunction.thatReturnsTrue
 
-type.defineValues do ->
-
-  internals =
-    _retries: 0
-    _retryTimer: null
-    _callback: null
-
-  return (options) ->
-    Object.assign options, internals
+type.defineValues (options) -> options
 
 type.defineGetters
+
   retries: -> @_retries
+
   isRetrying: -> @_retryTimer isnt null
+
+type.defineFunction (callback) ->
+  return if @_retryTimer
+  assertType callback, Function.Kind
+  @_callback = callback
+  timeout = @_computeTimeout @_retries
+  @_retryTimer = Timer timeout, @_retry
+  return
+
+type.defineMethods
+
+  reset: ->
+
+    if @_retryTimer
+      @_retryTimer.stop()
+      @_retryTimer = null
+
+    @_retries = 0
+    @_callback = null
+    return
+
+#
+# Internal
+#
+
+type.defineValues
+
+  _retries: 0
+
+  _retryTimer: null
+
+  _callback: null
 
 type.defineBoundMethods
 
@@ -60,14 +80,6 @@ type.defineBoundMethods
     return
 
 type.defineMethods
-
-  reset: ->
-    if @_retryTimer
-      @_retryTimer.stop()
-      @_retryTimer = null
-    @_retries = 0
-    @_callback = null
-    return
 
   _computeTimeout: (count) ->
     return @minTimeout if count < @minCount
