@@ -6,13 +6,7 @@ Timer = require "timer"
 Null = require "Null"
 Type = require "Type"
 
-type = Type "Retry", (callback) ->
-  return if @_retryTimer
-  assertType callback, Function.Kind
-  @_callback = callback
-  timeout = @_computeTimeout @_retries
-  @_retryTimer = Timer timeout, @_retry
-  return
+type = Type "Retry"
 
 type.defineArgs ->
 
@@ -47,6 +41,14 @@ type.defineValues do ->
 type.defineGetters
   retries: -> @_retries
   isRetrying: -> @_retryTimer isnt null
+
+type.defineFunction (callback) ->
+  return if @_retryTimer
+  assertType callback, Function.Kind
+  @_callback = callback
+  timeout = @_computeTimeout @_retries
+  @_retryTimer = Timer timeout, @_retry
+  return
 
 type.defineBoundMethods
 
